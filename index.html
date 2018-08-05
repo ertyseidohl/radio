@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+<body>
+	<canvas id="canvas"></canvas>
+	<script>
+
+		var canvas = document.getElementById("canvas");
+		canvas.width = 800;
+		canvas.height = 600;
+		var ctx = canvas.getContext("2d");
+
+		function Emitter(options) {
+			this.x = options.x || canvas.width / 2;
+			this.y = options.y || canvas.height / 2;
+			this.radius = options.radius || 10;
+		}
+
+		Emitter.prototype = {
+			emit : function() {
+				createNewWave({
+					x: this.x,
+					y: this.y
+				})
+			},
+			update: function() {},
+			draw: function() {
+				ctx.beginPath();
+				ctx.strokeStyle = "black";
+				ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+				ctx.stroke();
+			}
+		}
+
+		function Wave(options) {
+			this.x = options.x || 0;
+			this.y = options.y || 0;
+			this.radius = options.radius || 10;
+			this.speed = options.speed || 1;
+			this.color = options.color || "red";
+		}
+
+		Wave.prototype = {
+			update: function() {
+				this.radius += this.speed;
+
+				//todo make this better
+				if (this.radius > canvas.width) {
+					this.dead = true;
+				}
+			},
+			draw: function() {
+				var buffer = document.createElement("canvas");
+				buffer.width = canvas.width;
+				buffer.height = canvas.height;
+				var bctx = buffer.getContext("2d");
+
+				bctx.beginPath();
+				bctx.strokeStyle = this.color;
+				bctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+				bctx.stroke();
+
+				//debug
+				for (var i = 0; i < elements.length; i++) {
+					var wall = elements[i];
+					if (wall instanceof Wall) {
+
+					}
+				}
+				ctx.drawImage(buffer, 0, 0);
+			}
+		}
+
+		function Wall(options) {
+			this.sx = options.sx || 250;
+			this.sy = options.sy || 100;
+			this.ex = options.ex || 300;
+			this.ey = options.ey || 500;
+		}
+
+		Wall.prototype = {
+			update: function() {},
+			draw: function() {
+				ctx.beginPath();
+				ctx.strokeStyle = "blue";
+				ctx.width = 3;
+				ctx.moveTo(this.sx, this.sy);
+				ctx.lineTo(this.ex, this.ey);
+				ctx.stroke();
+			}
+		}
+
+		function dist(x1, y1, x2, y2) {
+			return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+		}
+
+		var frameCount = 0;
+		var elements = [new Emitter({}), new Wall({})];
+
+		function createNewWave(options) {
+			var newWave = new Wave(options);
+			elements.push(newWave);
+
+//			for (var i = 0; i < elements.length; i++ ) {
+//				var wall = elements[i];
+//				if (wall instanceof Wall) {
+//					//reflect point around wall
+//					var A = wall.ey - wall.sy;
+//					var B = -(wall.ex - wall.sx);
+//					var C = -A * wall.sx - B * wall.sy;
+//					var M = Math.sqrt(A*A + B*B);
+//					var Aprime = A/M;
+//					var Bprime = B/M;
+//					var Cprime = C/M;
+//					var D = Aprime * newWave.x + Bprime * newWave.y + Cprime;
+//					var reflection = new Wave({
+//						x: newWave.x - 2 * Aprime * D,
+//						y: newWave.y - 2 * Bprime * D,
+//						color: "green"
+//					});
+//					elements.push(reflection);
+//				}
+//			}
+		}
+
+		function loop() {
+			var i;
+			frameCount ++;
+			if (frameCount == 30) {
+				for (var  i = 0; i < elements.length; i++) {
+					if (elements[i] instanceof Emitter) {
+						elements[i].emit()
+					}
+				}
+			}
+			for(i = 0; i < elements.length; i++) {
+				elements[i].update();
+			}
+
+			//todo make better
+			for (i = elements.length - 1; i > 0; i--) {
+				if (elements[i].dead) {
+					elements.splice(i, 1);
+				}
+			}
+
+			ctx.fillStyle = "lightgrey";
+			ctx.fillRect(0, 0, canvas.width, canvas.height);
+			for(i = 0; i < elements.length; i++) {
+				elements[i].draw();
+			}
+
+			window.requestAnimationFrame(loop);
+		}
+
+		loop();
+
+	</script>
+</body>
+</html>
